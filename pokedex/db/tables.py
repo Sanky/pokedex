@@ -599,6 +599,21 @@ class ItemGameIndex(TableBase):
     game_index = Column(Integer, nullable=False,
         info=dict(description="Internal ID of the item in the generation"))
 
+class ItemLocation(TableBase):
+    u"""An item which can be found on a map.
+    """
+    __tablename__ = 'item_locations'
+    id = Column(Integer, primary_key=True, nullable=False,
+        info=dict(description="A numeric ID"))
+    version_group_id = Column(Integer, ForeignKey('version_groups.id'), nullable=False, autoincrement=False,
+        info=dict(description="Versions this entry applies to"))
+    item_id = Column(Integer, ForeignKey('items.id'), nullable=False,
+        info=dict(description="ID of the Item"))
+    location_area_id = Column(Integer, ForeignKey('location_areas.id'), nullable=False,
+        info=dict(description="ID of the Location area the item is found on"))
+    is_hidden = Column(Boolean, nullable=False,
+        info=dict(description="False if the item is found within a Pokéball, True if invisible."))
+
 class ItemPocket(TableBase):
     u"""A pocket that categorizes items
     """
@@ -1788,6 +1803,13 @@ ItemGameIndex.item = relationship(Item,
     innerjoin=True, lazy='joined',
     backref='game_indices')
 ItemGameIndex.generation = relationship(Generation,
+    innerjoin=True, lazy='joined')
+    
+ItemLocation.version_group = relationship(VersionGroup,
+    innerjoin=True, lazy='joined')
+ItemLocation.item = relationship(Item,
+    innerjoin=True, lazy='joined')
+ItemLocation.location_area = relationship(LocationArea,
     innerjoin=True, lazy='joined')
 
 ItemPocket.categories = relationship(ItemCategory,

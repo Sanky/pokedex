@@ -51,6 +51,7 @@ Items
 
 .. dex-table:: Item
 .. dex-table:: Berry
+.. dex-table:: ItemLocation
 
 Types
 -----
