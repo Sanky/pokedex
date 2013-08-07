@@ -2086,6 +2086,157 @@ class VersionGroupRegion(TableBase):
     region_id = Column(Integer, ForeignKey('regions.id'), primary_key=True, nullable=False,
         info=dict(description=u"The ID of the region."))
 
+# ---
+
+class MapEntity(TableBase):
+    u"""A sprite, trigger, sign, or warp somewhere on an overworld map
+    """
+    __tablename__ = 'map_entities'
+    __singlename__ = 'map_entity'
+    id = Column(Integer, primary_key=True, nullable=False,
+        info=dict(description=u"A numeric ID"))
+    location_area_id = Column(Integer, ForeignKey('location_areas.id'), nullable=False,
+        info=dict(description=u"ID of the area"))
+    x = Column(Integer, nullable=False
+        info=dict(description=u"The X position of the sprite on the map"))
+    y = Column(Integer, nullable=False
+        info=dict(description=u"The Y position of the sprite on the map"))
+    z = Column(Integer
+        info=dict(description=u"The Z position of the sprite on the map, if acceptable for the generation"))
+    type = Column(Enum("sprite", "trigger", "sign", "warp"), nullable=False
+        info=dict(description=u"How the entity is treated by the game."))
+    graphics = Column(Integer,
+        info=dict(description=u"The graphics of the entity in question.  Game-specific, will be amended"))
+
+class MapEntityItem(TableBase):
+    u"""An item obtainable from a map entity
+    """
+    __tablename__ = 'map_entity_items'
+    __singlename__ = 'map_entity_item'
+    map_entity_id = Column(Integer, ForeignKey('map_entities.id'), primary_key=True, nullable=False, autoincrement=False,
+        info=dict(description=u"ID of the map entity the item is obtainable from"))
+    item_id = Column(Integer, ForeignKey('items.id'), nullable=False, 
+        info=dict(description=u"ID of the item in question"))
+    amount = Column(Integer, nullable=False,
+        info=dict(description=u"How many of the item is obtained at once"))
+    obtained = Column(Boolean, nullable=False,
+        info=dict(description=u"Whether the item is obtained (generally from an NPC), or found, as from ground"))
+
+class MapEntityTrainer(TableBase):
+    u"""A trainer linked to a map entity
+    """
+    __tablename__ = 'map_entity_trainers'
+    __singlename__ = 'map_entity_trainer'
+    id = Column(Integer, primary_key=True, nullable=False,
+        info=dict(description=u"A numeric ID"))
+    map_entity_id = Column(Integer, ForeignKey('map_entities.id'), nullable=False,
+        info=dict(description=u"ID of the map entity the trainer can be fought from"))
+    trainer_id = Column(Integer, ForeignKey('trainers.id'), nullable=False,
+        info=dict(description=u"ID of the trainer which can be fought from the map entity"))
+
+class MapEntityPokemon(TableBase):
+    u"""A Pokémon linked to a map entity, either directly fought, or received.
+    """
+    __tablename__ = "map_entity_pokemon"
+    __singlename__ = "map_entity_pokemon"
+    map_entity_id = Column(Integer, ForeignKey('map_entities.id'), nullable=False,
+        info=dict(description=u"ID of the map entity the Pokémon relates to"))
+    pokemon_id = Column(Integer, ForeignKey('individual_pokemon.id'), nullable=False,
+        info=dict(description=u"ID of the individual Pokémon"))
+    event_type = Column(Enum('battle', 'receive'), nullable=False,
+        info=dict(description=u"How the Pokémon is approached"))
+
+class MapEntityShop(TableBase):
+    u"""A shop linked to a map entity.  Does not include item trades
+    """
+    __tablename__ = "map_entity_shop"
+    __singlename__ = "map_entity_shop"
+    id = Column(Integer, primary_key=True, nullable=False,
+        info=dict(description=u"A numeric ID"))
+    map_entity_id = Column(Integer, ForeignKey('map_entities.id'), nullable=False,
+        info=dict(description=u"ID of the map entity the shop relates to"))
+    currency = Column(Enum('money', 'coins', 'ash'), nullable=False,
+        info=dict(description=u"Which currency is used in the shop"))
+
+class Trainer(TableBase):
+    u"""A trainer which is able to be fought in the game
+    """
+    __tablename__ = 'trainers'
+    __singlename__ = 'trainer'
+    id = Column(Integer, primary_key=True, nullable=False,
+        info=dict(description=u"A numeric ID"))
+    trainer_class = Column(Integer, nullable=False,
+        info=dict(description=u"ID of the trainer's class.  Game-specific, will be amended"))
+    trainer_sprite = Column(Integer, nullable=False,
+        info=dict(description=u"ID of the trainer's sprite.  This differs from the class due to e.g. gym leaders"))
+    style = Column(Enum('single', 'double', 'triple', 'rotation'),
+        info=dict(description=u"How the battle is fought."))
+
+class TrainerItem(TableBase):
+    u"""A trainer's usable item
+    """
+    __tablename__ = 'trainer_items'
+    __singlename__ = 'trainer_item'
+    trainer_id = Column(Integer, ForeignKey('sprite_trainers.id'), primary_key=True, nullable=False, autoincrement=False,
+        info=dict(description=u"ID of the trainer who can use the item"))
+    item_id = Column(Integer, ForeignKey('items.id'), nullable=False,
+        info=dict(description=u"ID of the item the trainer has"))
+    amount = Column(Integer, nullable=False,
+        info=dict(description=u"The amount the trainer may choose to use"))
+
+class TrainerPokemon(TableBase):
+    u"""A trainer's Pokémon
+    """
+    __tablename__ = 'trainer_pokemon'
+    __singlename__ = 'trainer_pokemon'
+    trainer_id = Column(Integer, ForeignKey('trainers.id'), primary_key=True, nullable=False, autoincrement=False,
+        info=dict(description=u"ID of the trainer the Pokémon belongs to"))
+    pokemon_id = Column(Integer, ForeignKey('individual_pokemon.id'), nullable=False,
+        info=dict(description=u"ID of the individual Pokémon"))
+    slot = Column(Integer, nullable=False,
+        info=dict(description=u"The slot of the trainer's Pokémon, so they can be in proper order"))
+
+class IndividualPokemon(TableBase):
+    u"""An individual Pokémon inside a game, e.g. from a trainer or given to the player
+    """
+    __tablename__ = 'individual_pokemon'
+    __singlename__ = 'individual_pokemon'
+    id = Column(Integer, primary_key=True, nullable=False, autoincrement=False, 
+        info=dict(description=u"A numeric ID"))
+    pokemon_species_id = Column(Integer, ForeignKey('pokemon_species.id'), nullable=False,
+        info=dict(description=u"ID of the Pokémon species"))
+    level = Conumn(Integer,
+        info=dict(description=u"The level of the Pokémon"))
+    item_id = Column(Integer, ForeignKey('items.id'),
+        info=dict(description=u"ID of the Pokémon's held item, if any"))
+    is_egg = Conumn(Boolean, nullable=False,
+        info=dict(description=u"True if the Pokémon is given as an egg"))
+    
+class IndividualPokemonMove(TableBase):
+    u"""An individual Pokémon's move.  If a Pokémon has no move row, they are
+    supposed to simply know level-up moves at their level
+    """
+    __tablename__ = 'individual_pokemon_moves'
+    __singlename__ = 'individual_pokemon_move'
+    pokemon_id = Column(Integer, ForeignKey('individual_pokemon.id'), primary_key=True, nullable=False, autoincrement=False,
+        info=dict(description=u"ID of the Pokémon who knows the move"))
+    move_id = Column(Integer, ForeignKey('moves.id'), nullable=False,
+        info=dict(description=u"ID of the move in question"))
+    slot = Column(Integer, nullable=False,
+        info=dict(description=u"The slot of the Pokémon's move, so they can be in proper order"))
+
+class MapEntityShopItem(TableBase):
+    u"""A single item which can be bought in a shop.
+    """
+    __tablename__ = 'map_entity_shop_items'
+    __singlename__ = 'map_entity_shop_item'
+    shop_id = Column(Integer, ForeignKey('map_entity_shop.id'), primary_key=True, nullable=False, autoincrement=False,
+        info=dict(description=u"ID of the shop the item can be bought at"))
+    item_id = Column(Integer, ForeignKey('items.id'), nullable=False
+        info=dict(description=u"ID of the item which can be bought"))
+    slot = Column(Integer, nullable=False,
+        info=dict(description=u"The position of the item in the list"))
+
 
 ### Relationships down here, to avoid dependency ordering problems
 
